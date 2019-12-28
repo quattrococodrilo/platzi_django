@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block head_content %}
+<title>@{{request.user.username}} | Update profile</title>
+{% endblock %}
+
+{% block container %}
+<div class="row justify-content-md-center">
+    <div class="col-6 p-4" id="profile-box">
+
+        <!--
+███████  ██████  ██████  ███    ███
+██      ██    ██ ██   ██ ████  ████
+█████   ██    ██ ██████  ██ ████ ██
+██      ██    ██ ██   ██ ██  ██  ██
+██       ██████  ██   ██ ██      ██
+-->
+
+        <form action="{% url 'update_profile' %}" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div class="media">
+                <img src="{% if not profile.picture %}{% static "img/default-profile.png" %}{% else %}{{profile.picture.url}}{% endif %}" alt="{{user.username}}" class="rounded-circle" height="50">
+                <div class="media-body">
+                    <h5 class="ml-4">
+                        @{{user.username}} | {{user.get_full_name}}
+                    </h5>
+                </div>
+            </div>
+            <!--<p class="ml-4 mt-2" style="font-size: 0.8em">
+                    {{form.picture}}
+                </p>-->
+
+            <hr><br>
+
+            {% for field in form %}
+            <div class="fieldWrapper form-group" aria-required={% if field.field.required %}"true"{% else %}"false"{% endif %}>
+                {{ field.label_tag }}{% if field.field.required %}<span class="required" style="color: red;">*</span>{% endif %}
+                {{ field }}
+                {% if field.help_text %}
+                <p class="help">{{ field.help_text|safe }}</p>
+                {% endif %}
+                {% if field.errors %}
+                <small class="mt-0 text-danger">
+                    {{field.errors}}
+                </small>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <button type="submit" class="btn btn-primary btn-block btn-sm mt-5">Update info</button>
+        </form>
+
+        <!--
+███████  ██████  ██████  ███    ███         ██
+██      ██    ██ ██   ██ ████  ████        ██
+█████   ██    ██ ██████  ██ ████ ██       ██
+██      ██    ██ ██   ██ ██  ██  ██      ██
+██       ██████  ██   ██ ██      ██     ██
+-->
+
+    </div>
+</div>
+{% endblock %}
