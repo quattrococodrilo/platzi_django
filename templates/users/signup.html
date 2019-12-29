@@ -16,24 +16,31 @@
 
         <form action="{% url 'signup' %}" method="POST">
             {% csrf_token %}
-            <div class="form-group">
-                <input type="text" class="form-control" name="username" value="" placeholder="Username" required>
+
+            {% if form.non_field_errors %}
+            {% for error in form.non_field_errors %}
+            <div class="alert alert-danger" role="alert">
+                <small>{{ error }}</small>
             </div>
-            <div class="form-group">
-                <input type="password" class="form-control" name="password" value="" placeholder="Password" required>
+            {% endfor %}
+            {% endif %}
+
+            {% for field in form %}
+            <div class="fieldWrapper form-group" aria-required={% if field.field.required %}"true"{% else %}"false"{% endif %}>
+                <!--{{ field.label_tag }}{% if field.field.required %}<span class="required" style="color: red;">*</span>{% endif %}-->
+                {{ field }}
+                {% if field.help_text %}
+                <p class="help">{{ field.help_text|safe }}</p>
+                {% endif %}
+                {% if field.errors %}
+                {% for error in field.errors %}
+                <small class="mt-0 text-danger">
+                    {{error | escape}}
+                </small>
+                {% endfor %}
+                {% endif %}
             </div>
-            <div class="form-group">
-                <input type="password" class="form-control" name="password_confirmation" value="" placeholder="Password confirmation" required>
-            </div>
-            <div class="form-group">
-                <input type="text" class="form-control" name="first_name" value="" placeholder="First name" required>
-            </div>
-            <div class="form-group">
-                <input type="text" class="form-control" name="last_name" value="" placeholder="Last name" required>
-            </div>
-            <div class="form-group" required>
-                <input type="text" class="form-control" name="email" value="" placeholder="Email" required>
-            </div>
+            {% endfor %}
 
             <button type="submit" class="btn btn-primary btn-block">Sign in</button>
         </form>

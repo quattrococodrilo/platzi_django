@@ -4,21 +4,34 @@
 <title>Platzigram feed</title>
 {% endblock %}
 
+{% load static %}
 {% block container %}
 <section id="feed">
 
     <div class="row">
         {% for post in posts %}
-        <div class="col-lg-4 offset-lg-4">
-            <div class="media">
+        <div class="col-sm-12 col-md-8 offset-md-2 mt-5 p-0 post-container">
+            <div class="media pt-3 pl-3 pb-1">
+
+                {% if post.user.picture %}
                 <img class="mr-3 rounded-circle" src="{{post.user.picture}}" alt="{{post.user.name}}" height="35">
+                {% else %}
+                <img class="mr-3 rounded-circle" src="{% static "img/default-profile.png" %}" alt="{{post.user.name}}" height="35">
+                {% endif %}
+
                 <div class="media-body">
-                    <h5 class="mt-0">{{post.user.name}}</h5>
+                    <h5 class="margin-top: 5px;">{{post.user.name}}</h5>
                     {{post.timestamp}}
                 </div>
             </div>
-            <img class="img-fluid mt-3 border rounded" src="{{post.photo}}" alt="{{post.title | truncatewords:3}}">
-            <h6 class="ml-1 mt-1">{{post.title | truncatewords:3}}</h6>
+            <img class="img-fluid mt-3 border rounded" src="{{post.photo}}" alt="{{post.title | truncatewords:3}}" width="500">
+            <p class="mt-1 ml-2">
+                <a href="#" style="color: #000; font-size: 20px">
+                    <i class="far fa-heart"></i>
+                </a>{{likes | random}} likes
+            </p>
+            <h6 class="ml-1 mt-1">{{post.title}}</h6>
+
         </div>
         {% endfor %}
     </div>

@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.utils import IntegrityError
 from django.shortcuts import redirect, render
+from users.forms import ProfileForm, SignupForm
 from users.models import Profile
 
 # ██       ██████   ██████  ██ ███    ██
@@ -51,50 +52,32 @@ def logout_view(request):
 
 def singup_view(request):
     """Sign up view."""
+    form = SignupForm()
     if request.method == 'POST':
-        username = request.POST.get('username', '')
-        password = request.POST.get('password', '')
-        password_confirmation = request.POST.get('password_confirmation', '')
-        first_name = request.POST.get('first_name', '')
-        last_name = request.POST.get('last_name', '')
-        email = request.POST.get('email', '')
+        form = SignupForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('login')
+    return render(request,
+                  'users/signup.html',
+                  {'form': form})
 
-        if password != password_confirmation:
-            return render(request, 'users/signup.html',
-                          {'error': 'Password confirmation does not match.'})
+# ██    ██ ██████  ██████   █████  ████████ ███████
+# ██    ██ ██   ██ ██   ██ ██   ██    ██    ██
+# ██    ██ ██████  ██   ██ ███████    ██    █████
+# ██    ██ ██      ██   ██ ██   ██    ██    ██
+#  ██████  ██      ██████  ██   ██    ██    ███████
 
-        try:
-            user = User.objects.create_user(
-                username=username, email=email, password=password)
-        except IntegrityError:
-            return render(request, 'users/signup.html',
-                          {'error': 'User name is already in use.'})
-        user.first_name = first_name
-        user.last_name = last_name
-        user.save()
-
-        profile = Profile(user=user)
-        profile.save()
-
-        return redirect('login')
-    return render(request, 'users/signup.html')
-
-    # ██    ██ ██████  ██████   █████  ████████ ███████
-    # ██    ██ ██   ██ ██   ██ ██   ██    ██    ██
-    # ██    ██ ██████  ██   ██ ███████    ██    █████
-    # ██    ██ ██      ██   ██ ██   ██    ██    ██
-    #  ██████  ██      ██████  ██   ██    ██    ███████
-
-    # ██████  ██████   ██████  ███████ ██ ██      ███████
-    # ██   ██ ██   ██ ██    ██ ██      ██ ██      ██
-    # ██████  ██████  ██    ██ █████   ██ ██      █████
-    # ██      ██   ██ ██    ██ ██      ██ ██      ██
-    # ██      ██   ██  ██████  ██      ██ ███████ ███████
+# ██████  ██████   ██████  ███████ ██ ██      ███████
+# ██   ██ ██   ██ ██    ██ ██      ██ ██      ██
+# ██████  ██████  ██    ██ █████   ██ ██      █████
+# ██      ██   ██ ██    ██ ██      ██ ██      ██
+# ██      ██   ██  ██████  ██      ██ ███████ ███████
 
 
+@login_required
 def update_profile(request):
     """Update profile."""
-    from users.forms import ProfileForm
     form = ProfileForm()
     user = request.user
     profile = user.profile

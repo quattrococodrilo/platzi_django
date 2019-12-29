@@ -20,7 +20,12 @@
                 <input type="password" class="form-control" name="password" value="" placeholder="Password">
             </div>
             <button type="submit" class="btn btn-primary btn-block mt-5">Sing in!</button>
+
         </form>
     </div>
 </div>
+<p class="mt-4">
+    Don't have an account yet?
+    <a href="{% url 'signup' %}">Sign up here</a>
+</p>
 {% endblock %}
