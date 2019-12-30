@@ -6,7 +6,7 @@
 {% block container %}
 <div class="row">
     <div class="col">
-        <form action="{% url 'login' %}" method="POST">
+        <form action="{% url 'users:login' %}" method="POST">
             {% csrf_token %}
             {% if error %}
             <div class="alert alert-danger" role="alert">
@@ -26,6 +26,6 @@
 </div>
 <p class="mt-4">
     Don't have an account yet?
-    <a href="{% url 'signup' %}">Sign up here</a>
+    <a href="{% url 'users:signup' %}">Sign up here</a>
 </p>
 {% endblock %}

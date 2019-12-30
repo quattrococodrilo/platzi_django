@@ -86,7 +86,7 @@ def create_post(request):
         form = PostForm(data, request.FILES)
         if form.is_valid():
             form.save()
-            return redirect('feed')
+            return redirect('posts:feed')
         else:
             errors = form.errors.as_data()
             title_class = form.fields['title'].widget.attrs

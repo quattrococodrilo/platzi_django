@@ -2,11 +2,10 @@
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
-from django.db.utils import IntegrityError
 from django.shortcuts import redirect, render
+from django.views.generic.detail import DetailView
 from users.forms import ProfileForm, SignupForm
-from users.models import Profile
+from users.models import User
 
 # ██       ██████   ██████  ██ ███    ██
 # ██      ██    ██ ██       ██ ████   ██
@@ -23,7 +22,7 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
         if user:
             login(request, user)
-            return redirect('feed')
+            return redirect('posts:feed')
         else:
             return render(request, 'users/login.html',
                           {'error': 'Invalid username and password'})
@@ -41,7 +40,7 @@ def login_view(request):
 def logout_view(request):
     """Logout a user."""
     logout(request)
-    return redirect('login')
+    return redirect('users:login')
 
 
 # ███████ ██ ███    ██  ██████  ██    ██ ██████
@@ -57,7 +56,7 @@ def singup_view(request):
         form = SignupForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('login')
+            return redirect('users:login')
     return render(request,
                   'users/signup.html',
                   {'form': form})
@@ -97,7 +96,7 @@ def update_profile(request):
             profile.phone_number = data.get('phone_number', '')
             profile.picture = data.get('picture', '')
             profile.save()
-            redirect('update_profile')
+            redirect('posts:feed')
         else:
             errors = form.errors.as_data()
             if 'website' in errors:
@@ -109,3 +108,29 @@ def update_profile(request):
                   {'user': user,
                    'profile': profile,
                    'form': form, })
+
+
+# ██████  ███████ ████████  █████  ██ ██
+# ██   ██ ██         ██    ██   ██ ██ ██
+# ██   ██ █████      ██    ███████ ██ ██
+# ██   ██ ██         ██    ██   ██ ██ ██
+# ██████  ███████    ██    ██   ██ ██ ███████
+
+# ██    ██ ██ ███████ ██     ██
+# ██    ██ ██ ██      ██     ██
+# ██    ██ ██ █████   ██  █  ██
+#  ██  ██  ██ ██      ██ ███ ██
+#   ████   ██ ███████  ███ ███
+
+
+class DetailView(DetailView):
+    """Detail user data"""
+    template_name = 'users/detail.html'
+    slug_field = 'username'
+    slug_url_kwarg = 'username'
+    model = User
+
+    # def get_context_data(self, **kwargs):
+    #     context = super().get_context_data(**kwargs)
+    #     context['now'] = timezone.now()
+    #     return context
