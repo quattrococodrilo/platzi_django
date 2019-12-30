@@ -3,30 +3,30 @@ from users import views
 
 urlpatterns = [
 
-    # Posts
-    path('<str:username>/',
-         views.DetailView.as_view(),
-         name='detail'),
-
     # Management
     path(
         route='login/',
-        view=views.login_view,
+        view=views.LoginView.as_view(),
         name='login'
     ),
     path(
         route='logout/',
-        view=views.logout_view,
+        view=views.LogoutView.as_view(),
         name='logout'),
     path(
         route='signup/',
-        view=views.singup_view,
+        view=views.SignupView.as_view(),
         name='signup'
     ),
     path(
         route='me/profile/',
-        view=views.update_profile,
+        view=views.UpdateProfileView.as_view(),
         name='update_profile'
     ),
+
+    # Posts
+    path('<str:username>/',
+         views.DetailView.as_view(),
+         name='detail'),
 
 ]

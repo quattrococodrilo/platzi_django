@@ -1,11 +1,16 @@
 """Users views.AssertionError(args)"""
 
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect, render
+from django.urls import reverse, reverse_lazy
 from django.views.generic.detail import DetailView
-from users.forms import ProfileForm, SignupForm
-from users.models import User
+from django.views.generic.edit import FormView, UpdateView
+from posts.models import Post
+from users.forms import SignupForm
+from users.models import Profile, User
 
 # ██       ██████   ██████  ██ ███    ██
 # ██      ██    ██ ██       ██ ████   ██
@@ -14,20 +19,23 @@ from users.models import User
 # ███████  ██████   ██████  ██ ██   ████
 
 
-def login_view(request):
+class LoginView(auth_views.LoginView):
     """Login view."""
-    if request.method == 'POST':
-        username = request.POST.get('username', '')
-        password = request.POST.get('password', '')
-        user = authenticate(request, username=username, password=password)
-        if user:
-            login(request, user)
-            return redirect('posts:feed')
-        else:
-            return render(request, 'users/login.html',
-                          {'error': 'Invalid username and password'})
+    template_name = 'users/login.html'
 
-    return render(request, 'users/login.html')
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        form.fields['username'].widget.attrs.update({
+            'class': 'form-control'})
+        form.fields['password'].widget.attrs.update({
+            'class': 'form-control'})
+        return form
+
+    def get(self, request, *args, **kwargs):
+        """Handle GET requests: instantiate a blank version of the form."""
+        if request.user.is_authenticated:
+            return redirect('posts:feed')
+        return super().get(request, args, kwargs)
 
 
 # ██       ██████   ██████   ██████  ██    ██ ████████
@@ -36,11 +44,9 @@ def login_view(request):
 # ██      ██    ██ ██    ██ ██    ██ ██    ██    ██
 # ███████  ██████   ██████   ██████   ██████     ██
 
-@login_required
-def logout_view(request):
+class LogoutView(auth_views.LogoutView):
     """Logout a user."""
-    logout(request)
-    return redirect('users:login')
+    next_page = reverse_lazy('users:login')
 
 
 # ███████ ██ ███    ██  ██████  ██    ██ ██████
@@ -49,17 +55,16 @@ def logout_view(request):
 #      ██ ██ ██  ██ ██ ██    ██ ██    ██ ██
 # ███████ ██ ██   ████  ██████   ██████  ██
 
-def singup_view(request):
+class SignupView(FormView):
     """Sign up view."""
-    form = SignupForm()
-    if request.method == 'POST':
-        form = SignupForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('users:login')
-    return render(request,
-                  'users/signup.html',
-                  {'form': form})
+    template_name = 'users/signup.html'
+    form_class = SignupForm
+    success_url = reverse_lazy('users:login')
+
+    def form_valid(self, form):
+        """Save form data."""
+        form.save()
+        return super().form_valid(form)
 
 # ██    ██ ██████  ██████   █████  ████████ ███████
 # ██    ██ ██   ██ ██   ██ ██   ██    ██    ██
@@ -74,40 +79,31 @@ def singup_view(request):
 # ██      ██   ██  ██████  ██      ██ ███████ ███████
 
 
-@login_required
-def update_profile(request):
+class UpdateProfileView(LoginRequiredMixin, UpdateView):
     """Update profile."""
-    form = ProfileForm()
-    user = request.user
-    profile = user.profile
+    template_name = 'users/update_profile.html'
+    model = Profile
+    fields = ['website', 'biography', 'phone_number', 'picture']
 
-    form.fields['website'].initial = profile.website
-    form.fields['biography'].initial = profile.biography
-    form.fields['phone_number'].initial = profile.phone_number
-    form.fields['picture'].initial = profile.picture
+    def get_object(self):
+        """Return user's profile."""
+        return self.request.user.profile
 
-    if request.method == 'POST':
-        form = ProfileForm(request.POST, request.FILES)
+    def get_success_url(self):
+        """Return to user's profile"""
+        username = self.object.user.username
+        return reverse('users:detail', kwargs={'username': username})
 
-        if form.is_valid():
-            data = form.cleaned_data
-            profile.website = data.get('website', '')
-            profile.biography = data.get('biography', '')
-            profile.phone_number = data.get('phone_number', '')
-            profile.picture = data.get('picture', '')
-            profile.save()
-            redirect('posts:feed')
-        else:
-            errors = form.errors.as_data()
-            if 'website' in errors:
-                form.fields['website'].widget.attrs.update(
-                    {'class': 'form-control is-invalid'})
-
-    return render(request,
-                  'users/update_profile.html',
-                  {'user': user,
-                   'profile': profile,
-                   'form': form, })
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        form.fields['website'].widget.attrs.update({
+            'class': 'form-control'})
+        form.fields['biography'].widget.attrs.update({
+            'class': 'form-control',
+            'rows': 3})
+        form.fields['phone_number'].widget.attrs.update({
+            'class': 'form-control'})
+        return form
 
 
 # ██████  ███████ ████████  █████  ██ ██
@@ -123,14 +119,18 @@ def update_profile(request):
 #   ████   ██ ███████  ███ ███
 
 
-class DetailView(DetailView):
+class DetailView(LoginRequiredMixin, DetailView):
     """Detail user data"""
     template_name = 'users/detail.html'
     slug_field = 'username'
     slug_url_kwarg = 'username'
+    context_object_name = 'user'
     model = User
+    queryset = User.objects.all()
 
-    # def get_context_data(self, **kwargs):
-    #     context = super().get_context_data(**kwargs)
-    #     context['now'] = timezone.now()
-    #     return context
+    def get_context_data(self, **kwargs):
+        """Add user's posts to context"""
+        context = super().get_context_data(**kwargs)
+        user = self.get_object()
+        context['posts'] = Post.objects.filter(user=user).order_by('-created')
+        return context
